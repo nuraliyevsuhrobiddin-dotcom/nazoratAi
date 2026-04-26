@@ -1,11 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import logging
 
 from app.config import settings
 from app.database import create_indexes
 from app.routers import auth, places, reports, stats
 
 
+logger = logging.getLogger(__name__)
 app = FastAPI(title="Nazorat AI API", version="1.0.0")
 
 app.add_middleware(
@@ -19,7 +21,10 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def on_startup() -> None:
-    await create_indexes()
+    try:
+        await create_indexes()
+    except Exception as exc:
+        logger.warning("Database indexes were not created during startup: %s", exc)
 
 
 @app.get("/health")
